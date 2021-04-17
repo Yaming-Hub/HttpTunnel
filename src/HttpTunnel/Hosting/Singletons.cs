@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HttpTunnel.Contracts;
 using HttpTunnel.Implementations;
+using HttpTunnel.Models;
 
 namespace HttpTunnel.Hosting
 {
@@ -12,7 +13,7 @@ namespace HttpTunnel.Hosting
     /// </summary>
     public static class Singletons
     {
-        public static readonly ITunnelConnectionServer TunnelConnectionServer = new TunnelConnectionServer();
-        public static readonly IBackwardRequestHandler BackwardRequestHandler = new BackwardRequestHandler(TunnelConnectionServer);
+        public static readonly IAsyncQueue<RequestData> BackwardRequestQueue = new AsyncQueue<RequestData>();
+        public static readonly IBackwardRequestHandler BackwardRequestHandler = new BackwardRequestHandler(BackwardRequestQueue);
     }
 }

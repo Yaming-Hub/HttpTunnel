@@ -19,7 +19,7 @@ namespace HttpTunnel.Controllers
             this.backwardRequestHandler = backwardRequestHandler;
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{requestId}")]
         public void Put(int requestId, [FromBody] ResponseData response)
         {
             this.backwardRequestHandler.SetResponse(requestId, response);

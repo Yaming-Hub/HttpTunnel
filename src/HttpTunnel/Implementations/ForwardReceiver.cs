@@ -9,9 +9,9 @@ namespace HttpTunnel.Implementations
 {
     public class ForwardReceiver : IForwardReceiver
     {
-        private readonly IRequestClient requestClient;
+        private readonly ITunnelClient requestClient;
 
-        public ForwardReceiver(IRequestClient requestClient)
+        public ForwardReceiver(ITunnelClient requestClient)
         {
             this.requestClient = requestClient;
         }

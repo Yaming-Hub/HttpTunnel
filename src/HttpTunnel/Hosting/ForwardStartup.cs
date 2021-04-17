@@ -7,18 +7,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HttpTunnel.Hosting
 {
-    public class ForwardServerStartup
+    public class ForwardStartup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ITunnelClient, TunnelClient>();
-            services.AddSingleton<IRequestClient, RequestClient>();
 
             services.AddSingleton<IForwardReceiver, ForwardReceiver>();
             services.AddSingleton<IBackwardSender, BackwardSender>();
-            services.AddSingleton<ITunnelConnectionClient, TunnelConnectionClient>();
+            services.AddSingleton<IRequestPuller, RequestPuller>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -26,7 +25,7 @@ namespace HttpTunnel.Hosting
         {
             app.UseHttpsRedirection();
 
-            app.UseMiddleware<LogRequestMiddleware>();
+            app.UseMiddleware<LogRequestMiddleware>("forward");
             app.UseMiddleware<ForwardReceiverMiddleware>();
         }
     }

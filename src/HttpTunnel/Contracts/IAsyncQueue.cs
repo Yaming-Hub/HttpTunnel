@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace HttpTunnel.Contracts
 {
-    public interface ITunnelConnectionClient
+    public interface IAsyncQueue<T>
     {
-        Task Start(CancellationToken cancellationToken);
+        public void Enqueue(T item);
+
+        Task<(bool, T)> TryDequeue(TimeSpan timeout);
     }
 }

@@ -10,12 +10,12 @@ namespace HttpTunnel.Implementations
 {
     public class BackwardRequestHandler : IBackwardRequestHandler
     {
-        private readonly ITunnelConnectionServer connectionServer;
+        private readonly IAsyncQueue<RequestData> backwardRequestQueue;
         private readonly ConcurrentDictionary<int, BackwardRequestState> states;
 
-        public BackwardRequestHandler(ITunnelConnectionServer connectionServer)
+        public BackwardRequestHandler(IAsyncQueue<RequestData> requestQueue)
         {
-            this.connectionServer = connectionServer;
+            this.backwardRequestQueue = requestQueue;
             this.states = new ConcurrentDictionary<int, BackwardRequestState>();
         }
 
@@ -32,7 +32,7 @@ namespace HttpTunnel.Implementations
                 throw new InvalidOperationException($"Request {requestRata.Id} is already handled.");
             }
 
-            this.connectionServer.SendRequest(requestRata);
+            this.backwardRequestQueue.Enqueue(requestRata);
             return state.ResponseCompletionSource.Task;
         }
 

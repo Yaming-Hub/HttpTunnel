@@ -1,29 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using HttpTunnel.Contracts;
 using HttpTunnel.Implementations;
 using HttpTunnel.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace HttpTunnel.Hosting
 {
-    public class TunnerServerStartup
+    public class BackwardStartup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(Singletons.TunnelConnectionServer);
+            services.AddSingleton(Singletons.BackwardRequestQueue);
             services.AddSingleton(Singletons.BackwardRequestHandler);
-            services.AddSingleton<IForwardSender, ForwardSender>();
-
-            services.AddControllers().AddJsonOptions(opts => opts.JsonSerializerOptions.PropertyNamingPolicy = null);
+            services.AddSingleton<IBackwardReceiver, BackwardReceiver>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -31,15 +23,8 @@ namespace HttpTunnel.Hosting
         {
             app.UseHttpsRedirection();
 
-            app.UseMiddleware<LogRequestMiddleware>();
-            app.UseMiddleware<TunnerServerMiddleware>();
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseMiddleware<LogRequestMiddleware>("backward");
+            app.UseMiddleware<BackwardReceiverMiddleware>();
         }
     }
 }
