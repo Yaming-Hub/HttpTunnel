@@ -7,8 +7,10 @@ using HttpTunnel.Models;
 
 namespace HttpTunnel.Contracts
 {
-    public interface ITunnelClient
+    public interface IRequestClient
     {
-        Task<Stream> Connect();
+        Task<ResponseData> PostRequest(RequestData requestData);
+
+        Task PutResponse(int requestId, ResponseData responseData);
     }
 }

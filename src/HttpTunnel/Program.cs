@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
@@ -22,56 +22,78 @@ namespace HttpTunnel
                 .AddCommandLine(args)
                 .Build();
 
-            var mode = configuration.GetExecutionMode();
+            var modes = configuration.GetExecutionMode();
+            List<Task> tasks = new List<Task>();
+            foreach (var mode in modes)
+            {
+                switch (mode)
+                {
+                    case ExecutionMode.Backward:
+                        tasks.Add(RunBackwardAsync(configuration));
+                        break;
 
-            if (mode == ExecutionMode.Client)
-            {
-                RunClient(configuration);
+                    case ExecutionMode.Forward:
+                        tasks.Add(RunForwardAsync(configuration));
+                        break;
+                }
             }
-            else
-            {
-                RunServer(configuration);
-            }
+
+            Task.WaitAll(tasks.ToArray());
         }
 
-        private static void RunClient(IConfiguration configuration)
+        private static Task RunForwardAsync(IConfiguration configuration)
         {
-            var clientConfig = configuration.GetClientConfiguration();
+            var clientConfig = configuration.GetForwardConfiguration();
             var urls = clientConfig.Apps.Select(x => x.LocalAddress).ToArray();
 
-            var host = Host.CreateDefaultBuilder()
+            var forwardHost = Host.CreateDefaultBuilder()
                 .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
-                    .ConfigureWebHostDefaults(webBuilder =>
-                    {
-                        webBuilder.UseHttpSys()
-                        .UseUrls(urls)
-                        .UseStartup<ClientStartup>();
-                    }).Build();
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseHttpSys()
+                    .UseUrls(urls)
+                    .UseStartup<ForwardServerStartup>();
+                })
+                .Build();
 
             // Start the connection client.
-            var connectionClient = (IConnectionClient)host.Services.GetService(typeof(IConnectionClient));
-            connectionClient.Start();
+            var cancellationTokenSource = new CancellationTokenSource();
+            var connectionClient = (ITunnelConnectionClient)forwardHost.Services.GetService(typeof(ITunnelConnectionClient));
+            connectionClient.Start(cancellationTokenSource.Token);
 
-            host.Run();
+            return forwardHost.RunAsync().ContinueWith(t => cancellationTokenSource.Cancel());
         }
 
-        private static void RunServer(IConfiguration configuration)
+        private static Task RunBackwardAsync(IConfiguration configuration)
         {
-            var serverConfig = configuration.GetServerConfiguration();
-            var urls = new string[] { $"https://+:{serverConfig.TunnelPort}/tunnel" }
-                .Concat(serverConfig.Apps.Select(x => x.LocalAddress))
-                .ToArray();
+            var serverConfig = configuration.GetBackwardConfiguration();
 
-            var host = Host.CreateDefaultBuilder()
+            var tunnelUrl = $"https://+:{serverConfig.TunnelPort}/tunnel";
+            var tunnelHost = Host.CreateDefaultBuilder()
                 .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
-                    .ConfigureWebHostDefaults(webBuilder =>
-                    {
-                        webBuilder.UseHttpSys()
-                        .UseUrls(urls)
-                        .UseStartup<ServerStartup>();
-                    }).Build();
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseHttpSys()
+                    .UseUrls(tunnelUrl)
+                    .UseStartup<TunnerServerStartup>();
+                })
+                .Build();
 
-            host.Run();
+            var backwardUrls = serverConfig.Apps.Select(x => x.LocalAddress).ToArray();
+            var backwardHost = Host.CreateDefaultBuilder()
+                .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseHttpSys()
+                    .UseUrls(backwardUrls)
+                    .UseStartup<TunnerServerStartup>();
+                })
+                .Build();
+
+            var tunnelTask = tunnelHost.RunAsync();
+            var backwardTask = backwardHost.RunAsync();
+
+            return Task.WhenAll(tunnelTask, backwardTask);
         }
 
     }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace HttpTunnel.Models
 {
@@ -21,15 +23,8 @@ namespace HttpTunnel.Models
 
         public string Body { get; set; }
 
-        public static RequestData FromRequest(HttpRequest request)
+        public static async Task<RequestData> FromRequest(HttpRequest request)
         {
-            var uriBuilder = new UriBuilder();
-            uriBuilder.Scheme = request.Scheme;
-            uriBuilder.Host = request.Host.Host;
-            uriBuilder.Port = request.Host.Port.GetValueOrDefault(GetDefaultPort(request.Scheme));
-            uriBuilder.Path = request.Path.Value;
-            uriBuilder.Query = request.QueryString.Value;
-
             var headers = new List<HeaderData>(request.Headers.Count);
             foreach (var header in request.Headers)
             {
@@ -46,7 +41,7 @@ namespace HttpTunnel.Models
             string body = null;
             if (request.Body != null)
             {
-                body = Base64StreamReader.ReadStreamAsBase64String(request.Body);
+                body = await Base64StreamReader.ReadStreamAsBase64String(request.Body);
             }
 
             int id = Interlocked.Increment(ref LastRequestId);
@@ -55,7 +50,7 @@ namespace HttpTunnel.Models
             {
                 Id = id,
                 Method = request.Method,
-                Uri = uriBuilder.Uri.AbsoluteUri,
+                Uri = request.GetDisplayUrl(),
                 Headers = headers,
                 Body = body
             };

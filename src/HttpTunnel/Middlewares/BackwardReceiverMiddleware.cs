@@ -13,29 +13,17 @@ namespace HttpTunnel.Middlewares
     /// </summary>
     public class BackwardReceiverMiddleware
     {
-        private readonly RequestDelegate next;
-
-        public BackwardReceiverMiddleware(RequestDelegate next)
+        public BackwardReceiverMiddleware(RequestDelegate _)
         {
-            this.next = next;
         }
 
         public async Task InvokeAsync(HttpContext context, IBackwardReceiver backwardReceiver)
         {
-            var path = context.Request.Path.Value;
-            if (path != null && path.ToLower().StartsWith("/tunnel"))
-            {
-                // Ignore tunner internal requests.
-                await this.next(context);
-            }
-            else
-            {
-                var request = RequestData.FromRequest(context.Request);
+            var request = await RequestData.FromRequest(context.Request);
 
-                var response = await backwardReceiver.Receive(request);
+            var response = await backwardReceiver.Receive(request);
 
-                response.CopyTo(context.Response);
-            }
+            await response.CopyTo(context.Response);
         }
     }
 }

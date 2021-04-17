@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace HttpTunnel.Configurations
 {
-
-    public class TunnelServerConfiguration : TunnelConfiguration
+    public class ForwardConfiguration : TunnelConfiguration
     {
+        public string TunnelHost { get; set; }
     }
 }

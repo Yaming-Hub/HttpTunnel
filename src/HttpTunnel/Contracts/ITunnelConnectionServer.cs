@@ -9,7 +9,7 @@ using HttpTunnel.Models;
 
 namespace HttpTunnel.Contracts
 {
-    public interface IConnectionServer
+    public interface ITunnelConnectionServer
     {
         Task Run(StreamWriter writer, CancellationToken cancellationToken);
 

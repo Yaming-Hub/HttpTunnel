@@ -9,16 +9,16 @@ namespace HttpTunnel.Implementations
 {
     public class ForwardReceiver : IForwardReceiver
     {
-        private readonly ITunnelClient tunnelClient;
+        private readonly IRequestClient requestClient;
 
-        public ForwardReceiver(ITunnelClient tunnelClient)
+        public ForwardReceiver(IRequestClient requestClient)
         {
-            this.tunnelClient = tunnelClient;
+            this.requestClient = requestClient;
         }
 
         public Task<ResponseData> Receive(RequestData requestData)
         {
-            return this.tunnelClient.PostRequest(requestData);
+            return this.requestClient.PostRequest(requestData);
         }
     }
 }

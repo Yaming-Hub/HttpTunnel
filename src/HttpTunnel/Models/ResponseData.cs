@@ -11,13 +11,18 @@ namespace HttpTunnel.Models
 {
     public class ResponseData
     {
+        private static HashSet<string> HeadersDoNotCopy = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Transfer-Encoding"
+        };
+
         public int StatusCode { get; set; }
 
         public List<HeaderData> Headers { get; set; }
 
         public string Body { get; set; }
 
-        public static ResponseData FromResponse(HttpResponseMessage response)
+        public static async Task<ResponseData> FromResponse(HttpResponseMessage response)
         {
             var headers = new List<HeaderData>();
             foreach (var header in response.Headers)
@@ -35,8 +40,8 @@ namespace HttpTunnel.Models
             string body = null;
             if (response.Content != null)
             {
-                var responseStream = response.Content.ReadAsStream();
-                body = Base64StreamReader.ReadStreamAsBase64String(responseStream);
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                body = await Base64StreamReader.ReadStreamAsBase64String(responseStream);
             }
 
             return new ResponseData
@@ -48,19 +53,25 @@ namespace HttpTunnel.Models
         }
 
 
-        public void CopyTo(HttpResponse response)
+
+        public async Task CopyTo(HttpResponse response)
         {
             response.StatusCode = this.StatusCode;
 
             foreach (var header in this.Headers.GroupBy(x => x.Name, x => x.Value))
             {
+                if (HeadersDoNotCopy.Contains(header.Key))
+                {
+                    continue;
+                }
+
                 response.Headers[header.Key] = new StringValues(header.ToArray());
             }
 
             var bytes = Convert.FromBase64String(this.Body);
             using (var memoryStream = new MemoryStream(bytes))
             {
-                memoryStream.CopyTo(response.Body);
+                await memoryStream.CopyToAsync(response.Body);
             }
         }
     }

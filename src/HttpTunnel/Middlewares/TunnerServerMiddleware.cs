@@ -13,16 +13,16 @@ namespace HttpTunnel.Middlewares
     /// <summary>
     /// The backward receiver takes backward requests and push them into queue.
     /// </summary>
-    public class ConnectionServerMiddleware
+    public class TunnerServerMiddleware
     {
         private readonly RequestDelegate next;
 
-        public ConnectionServerMiddleware(RequestDelegate next)
+        public TunnerServerMiddleware(RequestDelegate next)
         {
             this.next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, IConnectionServer connectionServer)
+        public async Task InvokeAsync(HttpContext context, ITunnelConnectionServer connectionServer)
         {
             if (IsConnectRequest(context.Request))
             {
@@ -40,7 +40,6 @@ namespace HttpTunnel.Middlewares
 
                 // Note, this will be a long running operation, and the connection server should handle
                 // duplicate connection request internal.
-                
             }
             else
             {
@@ -56,7 +55,7 @@ namespace HttpTunnel.Middlewares
             }
 
             if (request.Path.Value == null ||
-                request.Path.Value.ToLower() != "/tunnel/connect")
+                request.Path.Value.ToLower() != "/connect")
             {
                 return false;
             }
