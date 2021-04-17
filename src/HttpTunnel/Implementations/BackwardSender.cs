@@ -10,24 +10,14 @@ using Microsoft.Extensions.Configuration;
 
 namespace HttpTunnel.Implementations
 {
-    public class BackwardSender : IBackwardSender
+    public class BackwardSender : SenderBase, IBackwardSender
     {
-        private readonly ITunnelClient tunnelClient;
+        private readonly IRequestClient requestClient;
 
-        private readonly HttpClient httpClient;
-
-        private readonly Redirect[] redirects;
-
-        public BackwardSender(ITunnelClient tunnelClient, IConfiguration configuration)
+        public BackwardSender(IRequestClient requestClient, IConfiguration configuration)
+            : base(configuration)
         {
-            this.tunnelClient = tunnelClient;
-
-            this.httpClient = new HttpClient(new HttpClientHandler()
-            {
-                ServerCertificateCustomValidationCallback = ServerCertificateValidation.TrustAll
-            });
-
-            this.redirects = configuration.GetClientConfiguration().Redirects;
+            this.requestClient = requestClient;
         }
 
         public void Send(RequestData requestData)
@@ -35,15 +25,13 @@ namespace HttpTunnel.Implementations
             _ = SendAsync(requestData);
         }
 
+        protected override Redirect[] GetRedirects(IConfiguration configuration) => configuration.GetForwardConfiguration().Redirects;
+
         private async Task SendAsync(RequestData requestData)
         {
-            var request = requestData.ToRequest();
+            var responseData = await this.InternalSend(requestData);
 
-            var response = await this.httpClient.SendAsync(request);
-
-            var responseData = ResponseData.FromResponse(response);
-
-            await this.tunnelClient.PutResponse(requestData.Id, responseData);
+            await this.requestClient.PutResponse(requestData.Id, responseData);
         }
     }
 }

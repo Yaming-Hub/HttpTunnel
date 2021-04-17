@@ -4,24 +4,25 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using HttpTunnel.Contracts;
 using HttpTunnel.Models;
 
 namespace HttpTunnel.Implementations
 {
-    public class ConnectionClient : IConnectionClient
+    public class TunnelConnectionClient : ITunnelConnectionClient
     {
         private readonly ITunnelClient tunnelClient;
         private readonly IBackwardSender backwardSender;
 
-        public ConnectionClient(ITunnelClient tunnelClient, IBackwardSender backwardSender)
+        public TunnelConnectionClient(ITunnelClient tunnelClient, IBackwardSender backwardSender)
         {
             this.tunnelClient = tunnelClient;
             this.backwardSender = backwardSender;
         }
 
-        public async Task Start()
+        public async Task Start(CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -32,7 +33,8 @@ namespace HttpTunnel.Implementations
                     {
                         while (!sr.EndOfStream)
                         {
-                            var json = sr.ReadLine();
+                            var json = await sr.ReadLineAsync();
+
                             try
                             {
                                 var requestData = JsonSerializer.Deserialize<RequestData>(json);

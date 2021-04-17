@@ -8,21 +8,29 @@ namespace HttpTunnel.Configurations
 {
     public static class ConfigurationExtensions
     {
-        public static ExecutionMode GetExecutionMode(this IConfiguration configuration)
+        public static IEnumerable<ExecutionMode> GetExecutionMode(this IConfiguration configuration)
         {
             var modeParameter = configuration.GetValue<string>("mode");
-            if (modeParameter == null || !Enum.TryParse<ExecutionMode>(modeParameter, out ExecutionMode mode))
+            if (modeParameter == null)
             {
-                throw new ArgumentException("Bad mode parameter", "mode");
+                throw new ArgumentException($"Mode parameter is not set.");
             }
 
-            return mode;
+            foreach (var modeString in modeParameter.Split(','))
+            {
+                if (!Enum.TryParse<ExecutionMode>(modeString.Trim(), true, out ExecutionMode mode))
+                {
+                    throw new ArgumentException($"Bad mode parameter value: {modeParameter}", "mode");
+                }
+
+                yield return mode;
+            }
         }
 
-        public static TunnelClientConfiguration GetClientConfiguration(this IConfiguration configuration)
-            => configuration.GetSection("Client").Get<TunnelClientConfiguration>();
+        public static ForwardConfiguration GetForwardConfiguration(this IConfiguration configuration)
+            => configuration.GetSection("Forward").Get<ForwardConfiguration>();
 
-        public static TunnelServerConfiguration GetServerConfiguration(this IConfiguration configuration)
-            => configuration.GetSection("Server").Get<TunnelServerConfiguration>();
+        public static BackwardConfiguration GetBackwardConfiguration(this IConfiguration configuration)
+            => configuration.GetSection("Backward").Get<BackwardConfiguration>();
     }
 }

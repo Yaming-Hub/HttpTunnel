@@ -7,7 +7,7 @@ namespace HttpTunnel.Configurations
 {
     public enum ExecutionMode
     {
-        Client,
-        Server
+        Forward,
+        Backward
     }
 }

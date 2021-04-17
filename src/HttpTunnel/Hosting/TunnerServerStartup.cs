@@ -13,18 +13,17 @@ using Microsoft.Extensions.Hosting;
 
 namespace HttpTunnel.Hosting
 {
-    public class ServerStartup
+    public class TunnerServerStartup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(Singletons.TunnelConnectionServer);
+            services.AddSingleton(Singletons.BackwardRequestHandler);
             services.AddSingleton<IForwardSender, ForwardSender>();
-            services.AddSingleton<IConnectionServer, ConnectionServer>();
-            services.AddSingleton<IBackwardRequestHandler, BackwardRequestHandler>();
-            services.AddSingleton<IBackwardReceiver, BackwardReceiver>();
 
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(opts => opts.JsonSerializerOptions.PropertyNamingPolicy = null);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -32,8 +31,8 @@ namespace HttpTunnel.Hosting
         {
             app.UseHttpsRedirection();
 
-            app.UseMiddleware<BackwardReceiverMiddleware>();
-            app.UseMiddleware<ConnectionServerMiddleware>();
+            app.UseMiddleware<LogRequestMiddleware>();
+            app.UseMiddleware<TunnerServerMiddleware>();
 
             app.UseRouting();
 

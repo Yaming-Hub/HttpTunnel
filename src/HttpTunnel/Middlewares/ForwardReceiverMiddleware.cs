@@ -13,13 +13,17 @@ namespace HttpTunnel.Middlewares
     /// </summary>
     public class ForwardReceiverMiddleware
     {
+        public ForwardReceiverMiddleware(RequestDelegate _)
+        {
+        }
+
         public async Task InvokeAsync(HttpContext context, IForwardReceiver forwardReceiver)
         {
-            var request = RequestData.FromRequest(context.Request);
+            var request = await RequestData.FromRequest(context.Request);
 
             var response = await forwardReceiver.Receive(request);
 
-            response.CopyTo(context.Response);
+            await response.CopyTo(context.Response);
         }
     }
 }

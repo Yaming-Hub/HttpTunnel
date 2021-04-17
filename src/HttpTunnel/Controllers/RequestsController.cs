@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HttpTunnel.Controllers
 {
     [ApiController]
-    [Route("tunnel/[controller]")]
+    [Route("[controller]")]
     public class RequestsController : ControllerBase
     {
         private readonly IForwardSender forwardSender;

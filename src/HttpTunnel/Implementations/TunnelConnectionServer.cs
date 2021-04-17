@@ -11,12 +11,12 @@ using HttpTunnel.Models;
 
 namespace HttpTunnel.Implementations
 {
-    public class ConnectionServer : IConnectionServer
+    public class TunnelConnectionServer : ITunnelConnectionServer
     {
         private readonly object lockObject;
         private readonly AsyncQueue<RequestData> queue;
 
-        public ConnectionServer()
+        public TunnelConnectionServer()
         {
             this.lockObject = new object();
             this.queue = new AsyncQueue<RequestData>();

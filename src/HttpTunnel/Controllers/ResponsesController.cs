@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HttpTunnel.Controllers
 {
     [ApiController]
-    [Route("tunnel/[controller]")]
+    [Route("[controller]")]
     public class ResponsesController : ControllerBase
     {
         private readonly IBackwardRequestHandler backwardRequestHandler;

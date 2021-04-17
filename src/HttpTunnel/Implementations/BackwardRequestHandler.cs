@@ -10,10 +10,10 @@ namespace HttpTunnel.Implementations
 {
     public class BackwardRequestHandler : IBackwardRequestHandler
     {
-        private readonly IConnectionServer connectionServer;
+        private readonly ITunnelConnectionServer connectionServer;
         private readonly ConcurrentDictionary<int, BackwardRequestState> states;
 
-        public BackwardRequestHandler(IConnectionServer connectionServer)
+        public BackwardRequestHandler(ITunnelConnectionServer connectionServer)
         {
             this.connectionServer = connectionServer;
             this.states = new ConcurrentDictionary<int, BackwardRequestState>();

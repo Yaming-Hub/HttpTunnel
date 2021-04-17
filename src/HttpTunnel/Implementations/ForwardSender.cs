@@ -1,32 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
+using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
 using HttpTunnel.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace HttpTunnel.Implementations
 {
-    public class ForwardSender : IForwardSender
+    public class ForwardSender : SenderBase, IForwardSender
     {
-        private readonly HttpClient httpClient;
-
-        public ForwardSender()
+        public ForwardSender(IConfiguration configuration)
+            : base(configuration)
         {
-            this.httpClient = new HttpClient(new HttpClientHandler()
-            {
-                ServerCertificateCustomValidationCallback = ServerCertificateValidation.TrustAll
-            });
         }
 
         public async Task<ResponseData> Send(RequestData requestData)
         {
-            var request = requestData.ToRequest();
-
-            var response = await this.httpClient.SendAsync(request);
-
-            return ResponseData.FromResponse(response);
+            return await this.InternalSend(requestData);
         }
+
+        protected override Redirect[] GetRedirects(IConfiguration configuration) => configuration.GetBackwardConfiguration().Redirects;
     }
 }

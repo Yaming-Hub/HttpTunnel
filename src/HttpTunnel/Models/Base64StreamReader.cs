@@ -8,13 +8,13 @@ namespace HttpTunnel.Models
 {
     public static class Base64StreamReader
     {
-        public static string ReadStreamAsBase64String(Stream stream)
+        public static async Task<string> ReadStreamAsBase64String(Stream stream)
         {
             byte[] bytes = null;
 
             using (var memoryStream = new MemoryStream(capacity: 4096))
             {
-                stream.CopyTo(memoryStream);
+                await stream.CopyToAsync(memoryStream);
                 bytes = memoryStream.ToArray();
             }
 

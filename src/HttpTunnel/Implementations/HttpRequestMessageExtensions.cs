@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 
 namespace HttpTunnel.Implementations
@@ -50,7 +48,7 @@ namespace HttpTunnel.Implementations
                     return false;
                 }
 
-                if (!uri.AbsolutePath.StartsWith(redirect.From.Path))
+                if (!uri.AbsolutePath.StartsWith(redirect.From.Path, StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
