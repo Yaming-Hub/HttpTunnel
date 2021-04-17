@@ -13,19 +13,17 @@ namespace BotServer
     {
         public static void Main(string[] args)
         {
-            string url = args[0];
-
-            CreateHostBuilder(args, url).Build().Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args, string url) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
 #pragma warning disable CA1416 // Validate platform compatibility
                     webBuilder.UseHttpSys()
 #pragma warning restore CA1416 // Validate platform compatibility
-                        .UseUrls(url)
+                        .UseUrls(args)
                         .UseStartup<Startup>();
                 });
     }
