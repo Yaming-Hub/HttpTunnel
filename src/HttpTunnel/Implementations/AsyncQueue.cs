@@ -51,7 +51,7 @@ namespace HttpTunnel.Implementations
                     if (timeout != TimeSpan.Zero)
                     {
                         CancellationTokenSource cts = new CancellationTokenSource(timeout);
-                        cts.Token.Register(() => { ask.SetResult((false, default(T))); });
+                        cts.Token.Register(() => { ask.TrySetResult((false, default(T))); });
                     }
 
                     this.asks.Enqueue(ask);
