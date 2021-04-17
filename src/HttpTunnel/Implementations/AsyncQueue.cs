@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HttpTunnel.Contracts;
 
 namespace HttpTunnel.Implementations
 {
-    public class AsyncQueue<T>
+    public class AsyncQueue<T> : IAsyncQueue<T>
     {
         private readonly object lockObject;
-        private readonly Queue<TaskCompletionSource<T>> asks;
+        private readonly Queue<TaskCompletionSource<(bool, T)>> asks;
         private readonly Queue<T> backlog;
 
         public AsyncQueue()
         {
             this.lockObject = new object();
-            this.asks = new Queue<TaskCompletionSource<T>>();
+            this.asks = new Queue<TaskCompletionSource<(bool, T)>>();
             this.backlog = new Queue<T>();
         }
 
@@ -23,10 +23,10 @@ namespace HttpTunnel.Implementations
         {
             lock (this.lockObject)
             {
-                if (this.asks.TryDequeue(out TaskCompletionSource<T> ask))
+                if (this.asks.TryDequeue(out TaskCompletionSource<(bool, T)> ask))
                 {
                     // There is a pending ask for the item, just return it.
-                    ask.SetResult(item);
+                    ask.SetResult((true, item));
                 }
                 else
                 {
@@ -35,27 +35,23 @@ namespace HttpTunnel.Implementations
                 }
             }
         }
-        public Task<T> Dequeue()
-        {
-            return this.Dequeue(TimeSpan.Zero, CancellationToken.None);
-        }
 
-        public Task<T> Dequeue(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task<(bool, T)> TryDequeue(TimeSpan timeout)
         {
             lock (this.lockObject)
             {
-                if (this.backlog.TryDequeue(out T result))
+                if (this.backlog.TryDequeue(out T item))
                 {
-                    return Task.FromResult(result);
+                    return Task.FromResult((true, item));
                 }
                 else
                 {
-                    var ask = new TaskCompletionSource<T>();
+                    var ask = new TaskCompletionSource<(bool, T)>();
 
                     if (timeout != TimeSpan.Zero)
                     {
                         CancellationTokenSource cts = new CancellationTokenSource(timeout);
-                        cts.Token.Register(() => { ask.TrySetCanceled(cancellationToken); });
+                        cts.Token.Register(() => { ask.SetResult((false, default(T))); });
                     }
 
                     this.asks.Enqueue(ask);

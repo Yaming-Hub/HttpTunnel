@@ -12,9 +12,9 @@ namespace HttpTunnel.Implementations
 {
     public class BackwardSender : SenderBase, IBackwardSender
     {
-        private readonly IRequestClient requestClient;
+        private readonly ITunnelClient requestClient;
 
-        public BackwardSender(IRequestClient requestClient, IConfiguration configuration)
+        public BackwardSender(ITunnelClient requestClient, IConfiguration configuration)
             : base(configuration)
         {
             this.requestClient = requestClient;

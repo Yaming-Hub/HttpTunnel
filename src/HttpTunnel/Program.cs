@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -52,13 +53,13 @@ namespace HttpTunnel
                 {
                     webBuilder.UseHttpSys()
                     .UseUrls(urls)
-                    .UseStartup<ForwardServerStartup>();
+                    .UseStartup<ForwardStartup>();
                 })
                 .Build();
 
             // Start the connection client.
             var cancellationTokenSource = new CancellationTokenSource();
-            var connectionClient = (ITunnelConnectionClient)forwardHost.Services.GetService(typeof(ITunnelConnectionClient));
+            var connectionClient = (IRequestPuller)forwardHost.Services.GetService(typeof(IRequestPuller));
             connectionClient.Start(cancellationTokenSource.Token);
 
             return forwardHost.RunAsync().ContinueWith(t => cancellationTokenSource.Cancel());
@@ -75,7 +76,7 @@ namespace HttpTunnel
                 {
                     webBuilder.UseHttpSys()
                     .UseUrls(tunnelUrl)
-                    .UseStartup<TunnerServerStartup>();
+                    .UseStartup<TunnelStartup>();
                 })
                 .Build();
 
@@ -86,7 +87,7 @@ namespace HttpTunnel
                 {
                     webBuilder.UseHttpSys()
                     .UseUrls(backwardUrls)
-                    .UseStartup<TunnerServerStartup>();
+                    .UseStartup<BackwardStartup>();
                 })
                 .Build();
 

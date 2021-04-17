@@ -11,12 +11,12 @@ using HttpTunnel.Models;
 
 namespace HttpTunnel.Implementations
 {
-    public class TunnelConnectionClient : ITunnelConnectionClient
+    public class RequestPuller : IRequestPuller
     {
         private readonly ITunnelClient tunnelClient;
         private readonly IBackwardSender backwardSender;
 
-        public TunnelConnectionClient(ITunnelClient tunnelClient, IBackwardSender backwardSender)
+        public RequestPuller(ITunnelClient tunnelClient, IBackwardSender backwardSender)
         {
             this.tunnelClient = tunnelClient;
             this.backwardSender = backwardSender;
@@ -28,23 +28,10 @@ namespace HttpTunnel.Implementations
             {
                 try
                 {
-                    using (var stream = await this.tunnelClient.Connect())
-                    using (var sr = new StreamReader(stream))
+                    var requestData = await this.tunnelClient.GetRequest();
+                    if (requestData != null)
                     {
-                        while (!sr.EndOfStream)
-                        {
-                            var json = await sr.ReadLineAsync();
-
-                            try
-                            {
-                                var requestData = JsonSerializer.Deserialize<RequestData>(json);
-                                this.backwardSender.Send(requestData);
-                            }
-                            catch (JsonException)
-                            {
-                                // Ignore back requests for now.
-                            }
-                        }
+                        this.backwardSender.Send(requestData);
                     }
                 }
                 catch (Exception e)

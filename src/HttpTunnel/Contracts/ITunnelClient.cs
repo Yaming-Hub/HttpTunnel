@@ -9,6 +9,10 @@ namespace HttpTunnel.Contracts
 {
     public interface ITunnelClient
     {
-        Task<Stream> Connect();
+        Task<RequestData> GetRequest();
+
+        Task<ResponseData> PostRequest(RequestData requestData);
+
+        Task PutResponse(int requestId, ResponseData responseData);
     }
 }

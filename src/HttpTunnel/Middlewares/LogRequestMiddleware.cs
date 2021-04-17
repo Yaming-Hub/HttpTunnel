@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using HttpTunnel.Contracts;
-using HttpTunnel.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 
@@ -15,17 +11,18 @@ namespace HttpTunnel.Middlewares
     public class LogRequestMiddleware
     {
         private readonly RequestDelegate next;
+        private readonly string name;
 
-        public LogRequestMiddleware(RequestDelegate next)
+        public LogRequestMiddleware(RequestDelegate next, string name)
         {
             this.next = next;
+            this.name = name;
         }
 
         public Task InvokeAsync(HttpContext context)
         {
             var r = context.Request;
-            Console.WriteLine($"{r.Scheme}://{r.Host}/{r.Path}");
-            Console.WriteLine($"{r.GetDisplayUrl()}");
+            Console.WriteLine($"{this.name}: {r.Method} {r.GetDisplayUrl()}");
 
             return this.next(context);
         }
