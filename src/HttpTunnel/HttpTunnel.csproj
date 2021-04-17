@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Authors>ymliu</Authors>
+    <Authors>Yaming Liu</Authors>
     <Company>Microsoft</Company>
     <Description>Http tunnel is a test tool which allows application to talk to remote server as local server via http by setting up a two way http tunnel.</Description>
     <PackageProjectUrl>https://github.com/Yaming-Hub/HttpTunnel</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Yaming-Hub/HttpTunnel</RepositoryUrl>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
