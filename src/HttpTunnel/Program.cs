@@ -19,6 +19,7 @@ namespace HttpTunnel
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
                 .AddEnvironmentVariables()
                 .AddCommandLine(args)
                 .Build();
@@ -44,8 +45,15 @@ namespace HttpTunnel
 
         private static Task RunForwardAsync(IConfiguration configuration)
         {
-            var clientConfig = configuration.GetForwardConfiguration();
-            var urls = clientConfig.Apps.Select(x => x.LocalAddress).ToArray();
+            Console.WriteLine("Starting forward host...");
+
+            var forwardConfig = configuration.GetForwardConfiguration();
+            if (forwardConfig == null)
+            {
+                throw new ArgumentException("Forward configuration is missing.");
+            }
+
+            var urls = forwardConfig.Apps.Select(x => x.LocalAddress).ToArray();
 
             var forwardHost = Host.CreateDefaultBuilder()
                 .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
@@ -67,9 +75,14 @@ namespace HttpTunnel
 
         private static Task RunBackwardAsync(IConfiguration configuration)
         {
-            var serverConfig = configuration.GetBackwardConfiguration();
+            Console.WriteLine("Starting backward host...");
+            var backwardConfig = configuration.GetBackwardConfiguration();
+            if (backwardConfig == null)
+            {
+                throw new ArgumentException("Bacward configuration is missing.");
+            }
 
-            var tunnelUrl = $"https://+:{serverConfig.TunnelPort}/tunnel";
+            var tunnelUrl = $"https://+:{backwardConfig.TunnelPort}/tunnel";
             var tunnelHost = Host.CreateDefaultBuilder()
                 .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -80,7 +93,7 @@ namespace HttpTunnel
                 })
                 .Build();
 
-            var backwardUrls = serverConfig.Apps.Select(x => x.LocalAddress).ToArray();
+            var backwardUrls = backwardConfig.Apps.Select(x => x.LocalAddress).ToArray();
             var backwardHost = Host.CreateDefaultBuilder()
                 .ConfigureHostConfiguration(cb => cb.AddConfiguration(configuration))
                 .ConfigureWebHostDefaults(webBuilder =>

@@ -31,12 +31,13 @@ namespace HttpTunnel.Implementations
                     var requestData = await this.tunnelClient.GetRequest();
                     if (requestData != null)
                     {
+                        Console.WriteLine($"Got backward request: [{requestData.Id}] {requestData.Method} {requestData.Uri}");
                         this.backwardSender.Send(requestData);
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e.ToString());
+                    Console.WriteLine("Fail to connect to tunnel server " + e.Message);
 
                     // Wait a short period of time before retry.
                     await Task.Delay(TimeSpan.FromSeconds(15));

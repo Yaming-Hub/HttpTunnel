@@ -11,6 +11,6 @@ namespace HttpTunnel.Configurations
 
         public PortAndPath[] Apps { get; set; }
 
-        public Redirect[] Redirects { get; set; }
+        public UrlReplaceRule[] UrlReplaceRules { get; set; }
     }
 }

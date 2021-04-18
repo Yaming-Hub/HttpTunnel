@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
@@ -25,13 +22,22 @@ namespace HttpTunnel.Implementations
             _ = SendAsync(requestData);
         }
 
-        protected override Redirect[] GetRedirects(IConfiguration configuration) => configuration.GetForwardConfiguration().Redirects;
+        protected override UrlReplaceRule[] GetReplaceRules(IConfiguration configuration)
+            => configuration.GetForwardConfiguration().UrlReplaceRules;
 
         private async Task SendAsync(RequestData requestData)
         {
             var responseData = await this.InternalSend(requestData);
+            Console.WriteLine($"Respone Received for request {requestData.Id}, StatusCode={responseData.StatusCode}.");
 
-            await this.requestClient.PutResponse(requestData.Id, responseData);
+            try
+            {
+                await this.requestClient.PutResponse(requestData.Id, responseData);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
     }
 }
