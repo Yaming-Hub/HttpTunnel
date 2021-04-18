@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Models;
@@ -10,7 +11,7 @@ namespace HttpTunnel.Implementations
     {
         private readonly HttpClient httpClient;
 
-        private readonly Redirect[] redirects;
+        private readonly UrlReplaceRule[] replaceRules;
 
         protected SenderBase(IConfiguration configuration)
         {
@@ -19,21 +20,28 @@ namespace HttpTunnel.Implementations
                 ServerCertificateCustomValidationCallback = ServerCertificateValidation.TrustAll
             });
 
-            this.redirects = this.GetRedirects(configuration);
+            this.replaceRules = this.GetReplaceRules(configuration);
         }
 
         protected async Task<ResponseData> InternalSend(RequestData requestData)
         {
             var request = requestData.ToRequest();
 
-            // Redirect request if necessary.
-            request.Redirect(this.redirects);
+            // Redirect request based on rules
+            var originalUri = request.RequestUri;
+            var replacedUri = originalUri.Replace(this.replaceRules);
+            if (!originalUri.Equals(replacedUri))
+            {
+                Console.WriteLine($"Replace Url: {originalUri} -> {replacedUri}");
+            }
+
+            request.RequestUri = replacedUri;
 
             var response = await this.httpClient.SendAsync(request);
 
             return await ResponseData.FromResponse(response);
         }
 
-        protected abstract Redirect[] GetRedirects(IConfiguration configuration);
+        protected abstract UrlReplaceRule[] GetReplaceRules(IConfiguration configuration);
     }
 }

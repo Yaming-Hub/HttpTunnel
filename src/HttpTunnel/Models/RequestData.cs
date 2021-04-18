@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,8 @@ namespace HttpTunnel.Models
         public string Uri { get; set; }
 
         public List<HeaderData> Headers { get; set; }
+
+        public string ContentType { get; set; }
 
         public string Body { get; set; }
 
@@ -52,7 +55,8 @@ namespace HttpTunnel.Models
                 Method = request.Method,
                 Uri = request.GetDisplayUrl(),
                 Headers = headers,
-                Body = body
+                Body = body,
+                ContentType = request.ContentType
             };
         }
 
@@ -69,6 +73,10 @@ namespace HttpTunnel.Models
             {
                 var bytes = Convert.FromBase64String(this.Body);
                 request.Content = new ByteArrayContent(bytes);
+                if (this.ContentType != null)
+                {
+                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(this.ContentType);
+                }
             }
 
             return request;

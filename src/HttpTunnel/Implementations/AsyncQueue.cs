@@ -23,12 +23,19 @@ namespace HttpTunnel.Implementations
         {
             lock (this.lockObject)
             {
-                if (this.asks.TryDequeue(out TaskCompletionSource<(bool, T)> ask))
+                // Try to set result to the top task completion source until succeed or exhausted.
+                bool exhausted = false;
+                bool succeeded = false;
+                while (!exhausted && !succeeded)
                 {
-                    // There is a pending ask for the item, just return it.
-                    ask.SetResult((true, item));
+                    exhausted = !this.asks.TryDequeue(out TaskCompletionSource<(bool, T)> ask);
+                    if (!exhausted)
+                    {
+                        succeeded = ask.TrySetResult((true, item));
+                    }
                 }
-                else
+
+                if (!succeeded)
                 {
                     // Nobody is asking for the item now, put it into backlog.
                     this.backlog.Enqueue(item);

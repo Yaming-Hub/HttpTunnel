@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
 using HttpTunnel.Models;
@@ -19,6 +18,7 @@ namespace HttpTunnel.Implementations
             return await this.InternalSend(requestData);
         }
 
-        protected override Redirect[] GetRedirects(IConfiguration configuration) => configuration.GetBackwardConfiguration().Redirects;
+        protected override UrlReplaceRule[] GetReplaceRules(IConfiguration configuration) 
+            => configuration.GetBackwardConfiguration().UrlReplaceRules;
     }
 }

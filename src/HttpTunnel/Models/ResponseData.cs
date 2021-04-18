@@ -22,6 +22,8 @@ namespace HttpTunnel.Models
 
         public string Body { get; set; }
 
+        public string ContentType { get; set; }
+
         public static async Task<ResponseData> FromResponse(HttpResponseMessage response)
         {
             var headers = new List<HeaderData>();
@@ -48,7 +50,8 @@ namespace HttpTunnel.Models
             {
                 StatusCode = (int)response.StatusCode,
                 Headers = headers,
-                Body = body
+                Body = body,
+                ContentType = response.Content.Headers.ContentType?.ToString()
             };
         }
 
@@ -68,10 +71,18 @@ namespace HttpTunnel.Models
                 response.Headers[header.Key] = new StringValues(header.ToArray());
             }
 
-            var bytes = Convert.FromBase64String(this.Body);
-            using (var memoryStream = new MemoryStream(bytes))
+            if (this.ContentType != null)
             {
-                await memoryStream.CopyToAsync(response.Body);
+                response.ContentType = this.ContentType;
+            }
+
+            if (this.Body != null)
+            {
+                var bytes = Convert.FromBase64String(this.Body);
+                using (var memoryStream = new MemoryStream(bytes))
+                {
+                    await memoryStream.CopyToAsync(response.Body);
+                }
             }
         }
     }
