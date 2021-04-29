@@ -8,17 +8,17 @@ namespace HttpTunnel.Middlewares
     /// <summary>
     /// This middle ware will return status for Is-Alive requests.
     /// </summary>
-    public class StatusMiddleware
+    public class ModeMiddleware
     {
-        public const string TunnelIsAliveHeader = "x-tunnel-status";
+        public const string TunnelIsAliveHeader = "x-tunnel-mode";
 
         private readonly RequestDelegate next;
-        private readonly string name;
+        private readonly string mode;
 
-        public StatusMiddleware(RequestDelegate next, string name)
+        public ModeMiddleware(RequestDelegate next, string mode)
         {
             this.next = next;
-            this.name = name;
+            this.mode = mode;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -26,7 +26,7 @@ namespace HttpTunnel.Middlewares
             if (context.Request.Headers.ContainsKey(TunnelIsAliveHeader))
             {
                 context.Response.StatusCode = StatusCodes.Status200OK;
-                await context.Response.WriteAsync(this.name);
+                await context.Response.WriteAsync(this.mode);
             }
             else
             {
