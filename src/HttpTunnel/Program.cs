@@ -24,6 +24,17 @@ namespace HttpTunnel
                 .AddCommandLine(args)
                 .Build();
 
+            foreach (var config in configuration.AsEnumerable())
+            {
+                Console.WriteLine($"{config.Key}={config.Value}");
+            }
+
+            if (configuration.GetValue<bool?>("PauseOnStart").GetValueOrDefault())
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+
             var modes = configuration.GetExecutionMode();
             List<Task> tasks = new List<Task>();
             foreach (var mode in modes)

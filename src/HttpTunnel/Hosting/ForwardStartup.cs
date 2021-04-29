@@ -26,6 +26,7 @@ namespace HttpTunnel.Hosting
             app.UseHttpsRedirection();
 
             app.UseMiddleware<LogRequestMiddleware>("forward");
+            app.UseMiddleware<StatusMiddleware>("forward"); 
             app.UseMiddleware<ForwardReceiverMiddleware>();
         }
     }
