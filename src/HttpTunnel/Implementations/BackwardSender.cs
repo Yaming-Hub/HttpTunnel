@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
+using HttpTunnel.Diagnostics;
 using HttpTunnel.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace HttpTunnel.Implementations
 {
@@ -11,10 +14,13 @@ namespace HttpTunnel.Implementations
     {
         private readonly ITunnelClient requestClient;
 
-        public BackwardSender(ITunnelClient requestClient, IConfiguration configuration)
-            : base(configuration)
+        private readonly ILogger<BackwardSender> logger;
+
+        public BackwardSender(ITunnelClient requestClient, IConfiguration configuration, ILogger<BackwardSender> logger)
+            : base(configuration, logger)
         {
             this.requestClient = requestClient;
+            this.logger = logger;
         }
 
         public void Send(RequestData requestData)
@@ -27,8 +33,11 @@ namespace HttpTunnel.Implementations
 
         private async Task SendAsync(RequestData requestData)
         {
+            this.logger.LogRequestData(LogEvents.RequestSent, requestData);
+
             var responseData = await this.InternalSend(requestData);
-            Console.WriteLine($"Respone Received for request {requestData.Id}, StatusCode={responseData.StatusCode}.");
+
+            this.logger.LogResponseData(LogEvents.ResponseReceived, responseData);
 
             try
             {
@@ -36,7 +45,7 @@ namespace HttpTunnel.Implementations
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                this.logger.LogError(e, "PutResponse failed");
             }
         }
     }

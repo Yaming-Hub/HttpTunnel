@@ -1,3 +1,4 @@
+using HttpTunnel.Configurations;
 using HttpTunnel.Contracts;
 using HttpTunnel.Implementations;
 using HttpTunnel.Middlewares;
@@ -26,7 +27,7 @@ namespace HttpTunnel.Hosting
             app.UseHttpsRedirection();
 
             app.UseMiddleware<LogRequestMiddleware>("forward");
-            app.UseMiddleware<ModeMiddleware>("forward"); 
+            app.UseMiddleware<StatusMiddleware>(ExecutionMode.Forward); 
             app.UseMiddleware<ForwardReceiverMiddleware>();
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NLog.Web;
 
 namespace HttpTunnel
 {
@@ -24,9 +26,13 @@ namespace HttpTunnel
                 .AddCommandLine(args)
                 .Build();
 
+            // Load nlog.config file.
+            var logFactory = NLogBuilder.ConfigureNLog("nlog.config");
+            var logger = logFactory.GetLogger(nameof(Program));
+
             foreach (var config in configuration.AsEnumerable())
             {
-                Console.WriteLine($"{config.Key}={config.Value}");
+                logger.Info($"{config.Key}={config.Value}");
             }
 
             if (configuration.GetValue<bool?>("PauseOnStart").GetValueOrDefault())
@@ -35,28 +41,42 @@ namespace HttpTunnel
                 Console.ReadKey();
             }
 
-            var modes = configuration.GetExecutionMode();
-            List<Task> tasks = new List<Task>();
-            foreach (var mode in modes)
+            try
             {
-                switch (mode)
+                var modes = configuration.GetExecutionMode();
+                List<Task> tasks = new List<Task>();
+                foreach (var mode in modes)
                 {
-                    case ExecutionMode.Backward:
-                        tasks.Add(RunBackwardAsync(configuration));
-                        break;
+                    switch (mode)
+                    {
+                        case ExecutionMode.Backward:
+                            tasks.Add(RunBackwardAsync(configuration, logger));
+                            break;
 
-                    case ExecutionMode.Forward:
-                        tasks.Add(RunForwardAsync(configuration));
-                        break;
+                        case ExecutionMode.Forward:
+                            tasks.Add(RunForwardAsync(configuration, logger));
+                            break;
+                    }
                 }
-            }
 
-            Task.WaitAll(tasks.ToArray());
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception exception)
+            {
+                //NLog: catch setup errors
+                logger.Error(exception, "Stopped program because of exception");
+                throw;
+            }
+            finally
+            {
+                // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
+                NLog.LogManager.Shutdown();
+            }
         }
 
-        private static Task RunForwardAsync(IConfiguration configuration)
+        private static Task RunForwardAsync(IConfiguration configuration, NLog.Logger logger)
         {
-            Console.WriteLine("Starting forward host...");
+            logger.Info("Starting forward host...");
 
             var forwardConfig = configuration.GetForwardConfiguration();
             if (forwardConfig == null)
@@ -74,6 +94,12 @@ namespace HttpTunnel
                     .UseUrls(urls)
                     .UseStartup<ForwardStartup>();
                 })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseNLog()
                 .Build();
 
             // Start the connection client.
@@ -84,9 +110,9 @@ namespace HttpTunnel
             return forwardHost.RunAsync().ContinueWith(t => cancellationTokenSource.Cancel());
         }
 
-        private static Task RunBackwardAsync(IConfiguration configuration)
+        private static Task RunBackwardAsync(IConfiguration configuration, NLog.Logger logger)
         {
-            Console.WriteLine("Starting backward host...");
+            logger.Info("Starting backward host...");
             var backwardConfig = configuration.GetBackwardConfiguration();
             if (backwardConfig == null)
             {
@@ -102,6 +128,12 @@ namespace HttpTunnel
                     .UseUrls(tunnelUrl)
                     .UseStartup<TunnelStartup>();
                 })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseNLog()
                 .Build();
 
             var backwardUrls = backwardConfig.Apps.Select(x => x.LocalAddress).ToArray();
@@ -113,6 +145,12 @@ namespace HttpTunnel
                     .UseUrls(backwardUrls)
                     .UseStartup<BackwardStartup>();
                 })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseNLog()
                 .Build();
 
             var tunnelTask = tunnelHost.RunAsync();

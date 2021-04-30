@@ -44,7 +44,17 @@ namespace HttpTunnel.Models
             string body = null;
             if (request.Body != null)
             {
-                body = await Base64StreamReader.ReadStreamAsBase64String(request.Body);
+                if (request.ContentType.IsTextContent())
+                {
+                    using (var sr = new StreamReader(request.Body))
+                    {
+                        body = await sr.ReadToEndAsync();
+                    }
+                }
+                else
+                {
+                    body = await Base64StreamReader.ReadStreamAsBase64String(request.Body);
+                }
             }
 
             int id = Interlocked.Increment(ref LastRequestId);
@@ -71,8 +81,16 @@ namespace HttpTunnel.Models
 
             if (this.Body != null)
             {
-                var bytes = Convert.FromBase64String(this.Body);
-                request.Content = new ByteArrayContent(bytes);
+                if (this.ContentType.IsTextContent())
+                {
+                    request.Content = new StringContent(this.Body);
+                }
+                else
+                {
+                    var bytes = Convert.FromBase64String(this.Body);
+                    request.Content = new ByteArrayContent(bytes);
+                }
+
                 if (this.ContentType != null)
                 {
                     request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(this.ContentType);
@@ -80,18 +98,6 @@ namespace HttpTunnel.Models
             }
 
             return request;
-        }
-
-        private static int GetDefaultPort(string scheme)
-        {
-            if ("https".Equals(scheme, StringComparison.OrdinalIgnoreCase))
-            {
-                return 443;
-            }
-            else
-            {
-                return 80;
-            }
         }
     }
 }

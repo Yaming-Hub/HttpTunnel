@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
@@ -16,6 +17,7 @@ namespace HttpTunnel.Models
             "Transfer-Encoding"
         };
 
+
         public int StatusCode { get; set; }
 
         public List<HeaderData> Headers { get; set; }
@@ -23,6 +25,7 @@ namespace HttpTunnel.Models
         public string Body { get; set; }
 
         public string ContentType { get; set; }
+
 
         public static async Task<ResponseData> FromResponse(HttpResponseMessage response)
         {
@@ -42,8 +45,15 @@ namespace HttpTunnel.Models
             string body = null;
             if (response.Content != null)
             {
-                var responseStream = await response.Content.ReadAsStreamAsync();
-                body = await Base64StreamReader.ReadStreamAsBase64String(responseStream);
+                if (response.Content.Headers.ContentType.IsTextContent())
+                {
+                    body = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    var responseStream = await response.Content.ReadAsStreamAsync();
+                    body = await Base64StreamReader.ReadStreamAsBase64String(responseStream);
+                }
             }
 
             return new ResponseData
@@ -54,8 +64,6 @@ namespace HttpTunnel.Models
                 ContentType = response.Content.Headers.ContentType?.ToString()
             };
         }
-
-
 
         public async Task CopyTo(HttpResponse response)
         {
@@ -78,10 +86,17 @@ namespace HttpTunnel.Models
 
             if (this.Body != null)
             {
-                var bytes = Convert.FromBase64String(this.Body);
-                using (var memoryStream = new MemoryStream(bytes))
+                if (this.ContentType.IsTextContent())
                 {
-                    await memoryStream.CopyToAsync(response.Body);
+                    await response.WriteAsync(this.Body);
+                }
+                else
+                {
+                    var bytes = Convert.FromBase64String(this.Body);
+                    using (var memoryStream = new MemoryStream(bytes))
+                    {
+                        await memoryStream.CopyToAsync(response.Body);
+                    }
                 }
             }
         }

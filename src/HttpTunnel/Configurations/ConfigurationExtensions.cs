@@ -32,5 +32,5 @@ namespace HttpTunnel.Configurations
 
         public static BackwardConfiguration GetBackwardConfiguration(this IConfiguration configuration)
             => configuration.GetSection("Backward").Get<BackwardConfiguration>();
-    }
+     }
 }

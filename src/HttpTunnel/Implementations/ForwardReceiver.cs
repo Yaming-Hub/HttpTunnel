@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using HttpTunnel.Contracts;
+using HttpTunnel.Diagnostics;
 using HttpTunnel.Models;
+using Microsoft.Extensions.Logging;
+using NLog;
 
 namespace HttpTunnel.Implementations
 {
@@ -11,14 +15,23 @@ namespace HttpTunnel.Implementations
     {
         private readonly ITunnelClient requestClient;
 
-        public ForwardReceiver(ITunnelClient requestClient)
+        private readonly ILogger<ForwardReceiver> logger;
+
+        public ForwardReceiver(ITunnelClient requestClient, ILogger<ForwardReceiver> logger)
         {
             this.requestClient = requestClient;
+            this.logger = logger;
         }
 
-        public Task<ResponseData> Receive(RequestData requestData)
+        public async Task<ResponseData> Receive(RequestData requestData)
         {
-            return this.requestClient.PostRequest(requestData);
+            this.logger.LogRequestData(LogEvents.RequestReceived, requestData);
+
+            var responseData = await this.requestClient.PostRequest(requestData);
+
+            this.logger.LogResponseData(LogEvents.ResponseReturned, responseData);
+
+            return responseData;
         }
     }
 }
