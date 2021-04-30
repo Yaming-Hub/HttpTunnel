@@ -19,11 +19,19 @@ namespace HttpTunnel.Middlewares
 
         private readonly RequestDelegate next;
         private readonly ExecutionMode mode;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
 
         public StatusMiddleware(RequestDelegate next, ExecutionMode mode)
         {
             this.next = next;
             this.mode = mode;
+
+            this.jsonSerializerOptions = new JsonSerializerOptions
+            {
+                Converters ={
+                    new JsonStringEnumConverter()
+                }
+            };
         }
 
         public async Task InvokeAsync(HttpContext context, IConfiguration configuration)
@@ -34,12 +42,13 @@ namespace HttpTunnel.Middlewares
                 var status = new TunnelStatus
                 {
                     Mode = this.mode,
-                    Configuration = this.mode == ExecutionMode.Forward
-                        ? configuration.GetForwardConfiguration()
-                        : configuration.GetBackwardConfiguration()
+                    ForwardConfiguration = configuration.GetForwardConfiguration(),
+                    BackwardConfiguration = configuration.GetBackwardConfiguration(),
                 };
 
-                await context.Response.WriteAsync(JsonSerializer.Serialize(status));
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(status, this.jsonSerializerOptions));
+                await context.Response.CompleteAsync();
             }
             else
             {
