@@ -31,18 +31,9 @@ namespace HttpTunnel.Implementations
         {
             if (rule != null && rule.Pattern != null && rule.Replacement != null)
             {
-                Regex regex = null;
-
-                try
-                {
-                    // TODO: Cache regex in concurrent dictionary.
-                    regex = new Regex(rule.Pattern, RegexOptions.IgnoreCase);
-                }
-                catch (ArgumentException)
-                {
-                    Console.WriteLine($"Invalid rule pattern: {rule.Pattern}");
-                }
-
+                // TODO: Cache regex in concurrent dictionary.
+                var regex = new Regex(rule.Pattern, RegexOptions.IgnoreCase);
+                
                 if (regex != null && regex.IsMatch(uri))
                 {
                     uri = regex.Replace(uri, rule.Replacement);

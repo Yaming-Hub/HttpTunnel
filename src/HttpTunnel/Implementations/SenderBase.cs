@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using HttpTunnel.Configurations;
 using HttpTunnel.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace HttpTunnel.Implementations
 {
@@ -13,7 +14,9 @@ namespace HttpTunnel.Implementations
 
         private readonly UrlReplaceRule[] replaceRules;
 
-        protected SenderBase(IConfiguration configuration)
+        private readonly ILogger logger;
+
+        protected SenderBase(IConfiguration configuration, ILogger logger)
         {
             this.httpClient = new HttpClient(new HttpClientHandler()
             {
@@ -21,6 +24,7 @@ namespace HttpTunnel.Implementations
             });
 
             this.replaceRules = this.GetReplaceRules(configuration);
+            this.logger = logger;
         }
 
         protected async Task<ResponseData> InternalSend(RequestData requestData)
@@ -32,7 +36,7 @@ namespace HttpTunnel.Implementations
             var replacedUri = originalUri.Replace(this.replaceRules);
             if (!originalUri.Equals(replacedUri))
             {
-                Console.WriteLine($"Replace Url: {originalUri} -> {replacedUri}");
+                this.logger.LogTrace($"Replace Url: {originalUri} -> {replacedUri}");
             }
 
             request.RequestUri = replacedUri;
