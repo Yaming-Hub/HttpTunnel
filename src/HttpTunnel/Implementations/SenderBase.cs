@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using HttpTunnel.Configurations;
@@ -20,6 +21,7 @@ namespace HttpTunnel.Implementations
         {
             this.httpClient = new HttpClient(new HttpClientHandler()
             {
+                AutomaticDecompression = DecompressionMethods.All,
                 ServerCertificateCustomValidationCallback = ServerCertificateValidation.TrustAll
             });
 

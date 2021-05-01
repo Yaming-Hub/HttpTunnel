@@ -33,7 +33,7 @@ namespace HttpTunnel.Models
                 return true;
             }
 
-            if (mediaType == "application/json")
+            if (mediaType.StartsWith("application/json"))
             {
                 return true;
             }
