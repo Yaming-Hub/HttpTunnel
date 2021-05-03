@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -17,9 +19,20 @@ namespace HttpTunnel.Middlewares
     {
         public const string TunnelIsAliveHeader = "x-tunnel-status";
 
+        private static readonly RuntimeInfo Runtime;
+
         private readonly RequestDelegate next;
         private readonly ExecutionMode mode;
         private readonly JsonSerializerOptions jsonSerializerOptions;
+
+        static StatusMiddleware()
+        {
+            StatusMiddleware.Runtime = new RuntimeInfo
+            {
+                ProcessId = Process.GetCurrentProcess().Id,
+                ApplicationDirectory = Path.GetDirectoryName(typeof(StatusMiddleware).Assembly.Location),
+            };
+        }
 
         public StatusMiddleware(RequestDelegate next, ExecutionMode mode)
         {
@@ -42,6 +55,7 @@ namespace HttpTunnel.Middlewares
                 var status = new TunnelStatus
                 {
                     Mode = this.mode,
+                    Runtime = StatusMiddleware.Runtime,
                     ForwardConfiguration = configuration.GetForwardConfiguration(),
                     BackwardConfiguration = configuration.GetBackwardConfiguration(),
                 };
