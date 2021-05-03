@@ -10,6 +10,8 @@ namespace HttpTunnel.Models
     {
         public ExecutionMode Mode { get; set; }
 
+        public RuntimeInfo Runtime { get; set; }
+
         public ForwardConfiguration ForwardConfiguration { get; set; }
 
         public BackwardConfiguration BackwardConfiguration { get; set; }
