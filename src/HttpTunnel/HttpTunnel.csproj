@@ -8,6 +8,8 @@
     <PackageProjectUrl>https://github.com/Yaming-Hub/HttpTunnel</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Yaming-Hub/HttpTunnel</RepositoryUrl>
     <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
