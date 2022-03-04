@@ -16,6 +16,7 @@ namespace HttpTunnel.Hosting
         {
             services.AddSingleton(Singletons.BackwardRequestQueue);
             services.AddSingleton(Singletons.BackwardRequestHandler);
+            services.AddSingleton<ILoopBreaker, LoopBreaker>();
             services.AddSingleton<IBackwardReceiver, BackwardReceiver>();
         }
 
