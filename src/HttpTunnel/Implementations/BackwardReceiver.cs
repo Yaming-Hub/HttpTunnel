@@ -16,15 +16,23 @@ namespace HttpTunnel.Implementations
 
         private readonly ILogger<BackwardReceiver> logger;
 
-        public BackwardReceiver(IBackwardRequestHandler backwardRequestHandler, ILogger<BackwardReceiver> logger)
+        private readonly ILoopBreaker loopBreaker;
+
+        public BackwardReceiver(
+            IBackwardRequestHandler backwardRequestHandler,
+            ILoopBreaker loopBreaker, 
+            ILogger<BackwardReceiver> logger)
         {
             this.backwardRequestHandler = backwardRequestHandler;
+            this.loopBreaker = loopBreaker;
             this.logger = logger;
         }
 
         public async Task<ResponseData> Receive(RequestData requestData)
         {
             this.logger.LogRequestData(LogEvents.RequestReceived, requestData);
+
+            this.loopBreaker.ValidateAndTag(requestData);
 
             var responseData = await this.backwardRequestHandler.Handle(requestData);
 

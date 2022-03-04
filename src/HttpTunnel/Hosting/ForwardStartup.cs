@@ -16,6 +16,7 @@ namespace HttpTunnel.Hosting
         {
             services.AddSingleton<ITunnelClient, TunnelClient>();
 
+            services.AddSingleton<ILoopBreaker, LoopBreaker>();
             services.AddSingleton<IForwardReceiver, ForwardReceiver>();
             services.AddSingleton<IBackwardSender, BackwardSender>();
             services.AddSingleton<IRequestPuller, RequestPuller>();
